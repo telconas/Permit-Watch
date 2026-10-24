@@ -1,0 +1,165 @@
+Building and Engineering Permitting Online Services
+
+Home Search Search Results Inquiry
+
+Inquiry Results
+
+Application ID:
+2027-000757
+Permit Number:
+Date Applied:
+10/21/2026
+Date Issued:
+Expiration Date:
+Date Completed:
+Parcel Info
+Parcel Address:
+2128 HYDE PARK CIR
+Site Address:
+City:
+SARASOTA
+State:
+FL
+Zip Code:
+34239
+Legal Owner and Description (current)
+Below represents current parcel information from the property assessor's database. See Contact Info for ownership information during this application/permit.
+Owner Name(s):
+HYDE PARK GCCC LLC,
+Owner(s) address:
+PO BOX 17885
+SARASOTA FL 34276-0885
+Legal Description:
+LOT 28 PURTZ UNIT 2
+Permit Info
+Description of Work
+Location of Work:
+Type of Construction:
+1 Hour Protected:
+NO
+Census Item:
+003
+Work Type:
+ALTERATIONS/REPAIRS - RESIDENTIAL
+Work Description:
+CAST IRON REPLACEMENT UNDER SLAB W/ SEWER RE-ROUTE + MINI LIFT STATION
+Occupancy Use:
+R3 Primary Perm, Not R1, R2,R4 or I
+Occupant Load:
+Type of Business:
+Total Construction Amt:
+21000
+Prepaid Amount:
+0
+Conditions:
+Plans:
+De Minimis:
+Public/Private
+PRIVATE
+Additional Building Information
+# Buildings:
+# Units:
+# Stories:
+Entire Bldg (sqft):
+Floor Area (sqft):
+Tenant Area (sqft):
+Seating:
+Thres Bldg:
+Fire District:
+Sq_ft:
+Certificate of Occupancy Issued On:
+Temp CO Expires in Day(s):
+Temporary Certificate of Occupancy Issued On:
+Temp CO Conditions:
+Contact Info
+Owner Information
+Name:
+HYDE PARK GCCC LLC,
+Address:
+PO BOX 17885
+SARASOTA FL 34276-0885
+Phone:
+(941)955-5362
+Fax:
+Tenant:
+Fee Simple Title Holder Information
+Name:
+Address:
+Phone:
+Fax:
+Architect Information
+Name:
+Address:
+Phone:
+Fax:
+Engineer Information
+Name:
+Address:
+Phone:
+Fax:
+Mortgage Lender Information
+Name:
+Address:
+Phone:
+Fax:
+Local Contact Information
+Name:
+Address:
+Phone:
+Fax:
+Special Inspector Information
+Name:
+Address:
+Phone:
+Fax:
+Contractor
+Primary Contractor Information
+City Registration #:
+15942
+State Cert/Reg #:
+CFC046012
+Name:
+TERRY LEE ROBERTS
+Company:
+TERRY'S PLUMBING SERVICE INC
+Business Address:
+2401 15TH ST
+Mailing Address:
+2401 15TH ST
+Phone:
+(941)955-5362
+Fax:
+SARASOTA FLORIDA 34237
+Zoning App.
+Zoning Information
+Finished Floor Certificate Required?
+NO
+Final Finished Floor Certificate Required?
+NO
+Minimum Finished Floor Elevation:
+Flood Zone:
+Zone:
+0100
+Dwell Units:
+Notes:
+Review
+Administrative
+Status:
+Pending Plan Review
+Received:
+10/21/2026
+Comments:
+Plans Review
+Status:
+Pending Plan Corrections
+Received:
+10/21/2026
+Comments:
+
+Inspections
+Request Date Inspection Date Field/Type By Status Fees
+
+Transmittals
+Transmittal Date Description
+
+Return to Search Results
