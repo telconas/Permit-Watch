@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { getSession } from '@/lib/session';
+import { openAccess } from '@/lib/demo';
 
 export async function SiteHeader() {
   const session = await getSession().catch(() => null);
@@ -11,7 +12,11 @@ export async function SiteHeader() {
           <Logo />
         </Link>
         <nav className="flex items-center gap-2 text-sm">
-          {session ? (
+          {openAccess() ? (
+            <Link href="/dashboard" className="btn-hot">
+              Browse permits
+            </Link>
+          ) : session ? (
             <>
               <Link href="/dashboard" className="hidden rounded-lg px-3 py-2 font-medium hover:bg-ground sm:inline-block">
                 Permits

@@ -29,6 +29,7 @@ test('JSON store: first run inserts, later runs update and keep history', async 
   await day2.start();
   const existing = await day2.existing(['2027-000001', '2027-000002']);
   assert.equal(existing.get('2027-000001')?.status, 'Pending Plan Review');
+  assert.equal(existing.get('2027-000001')?.complete, false, 'no fields saved yet, so it gets re-read');
   assert.equal(await day2.put({ app_id: '2027-000001', status: 'Issued', tags: [], tag_reasons: {} }, false), 'updated');
   assert.equal(await day2.put({ app_id: '2027-000002', status: 'Pending Plan Review', applied_date: '2026-10-22' }, true), 'inserted');
   await day2.finish({ listed: 2, inserted: 1, updated: 1 });

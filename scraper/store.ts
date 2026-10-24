@@ -5,7 +5,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname } from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-export type Existing = { app_id: string; status: string | null; detail_scraped_at: string | null };
+/** complete = the stored record has the full detail page (all fields). */
+export type Existing = { app_id: string; status: string | null; detail_scraped_at: string | null; complete: boolean };
 export type RunStats = { listed: number; inserted: number; updated: number };
 export type StoredRecord = Record<string, unknown> & { app_id: string; status?: string | null };
 
@@ -70,7 +71,13 @@ export class JsonStore implements Store {
     const map = new Map<string, Existing>();
     for (const id of ids) {
       const p = this.byId.get(id);
-      if (p) map.set(id, { app_id: id, status: (p.status as string) ?? null, detail_scraped_at: (p.detail_scraped_at as string) ?? null });
+      if (p)
+        map.set(id, {
+          app_id: id,
+          status: (p.status as string) ?? null,
+          detail_scraped_at: (p.detail_scraped_at as string) ?? null,
+          complete: !!p.detail_scraped_at && !!p.fields,
+        });
     }
     return map;
   }
@@ -123,11 +130,11 @@ export class SupabaseStore implements Store {
   async existing(ids: string[]) {
     const map = new Map<string, Existing>();
     for (let i = 0; i < ids.length; i += 200) {
-      const { data, error } = await this.db.from('permits').select('app_id,status,detail_scraped_at').in('app_id', ids.slice(i, i + 200));
+      const { data, error } = await this.db.from('permits').select('app_id,status,detail_scraped_at,fields').in('app_id', ids.slice(i, i + 200));
       if (error) throw error;
       for (const r of data ?? []) {
-        map.set(r.app_id, r as Existing);
-        this.known.set(r.app_id, (r as Existing).status);
+        map.set(r.app_id, { app_id: r.app_id, status: r.status, detail_scraped_at: r.detail_scraped_at, complete: !!r.detail_scraped_at && !!r.fields });
+        this.known.set(r.app_id, r.status);
       }
     }
     return map;

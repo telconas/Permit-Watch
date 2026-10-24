@@ -69,8 +69,32 @@ export type PermitDetail = {
   contractor_name: string | null;
   contractor_phone: string | null;
   contractor_license: string | null;
+  contractor_address: string | null;
+  contractor_mailing_address: string | null;
+  contractor_fax: string | null;
+  contractor_city_registration: string | null;
+  parcel_address: string | null;
+  legal_description: string | null;
   review_status: string | null;
+  plans_review_status: string | null;
+  /** Every non-empty field on the city's page, grouped by section, in page order. */
+  fields: Record<string, Record<string, string>>;
 };
+
+// The page lays out "City, State ZIP" for the contractor under the Fax label.
+const CITY_LINE = /^[A-Z .'-]+,?\s+(FL|FLORIDA|[A-Z]{2})\s+\d{5}(-\d{4})?$/i;
+
+/** Groups the flat "Section|Label" map into sections, dropping empty values. */
+export function groupFields(flat: Record<string, string>) {
+  const out: Record<string, Record<string, string>> = {};
+  for (const [key, raw] of Object.entries(flat)) {
+    const value = raw.replace(/,\s*$/, '').trim();
+    if (!value) continue;
+    const [section, label] = key.split('|');
+    (out[section] ??= {})[label] = value;
+  }
+  return out;
+}
 
 const clean = (v?: string) => {
   const s = (v ?? '').replace(/,\s*$/, '').trim();
@@ -91,10 +115,25 @@ export function toNumber(v?: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * True once the page's background call has filled in the record. The labels are on the page
+ * from the start; the values (application ID, date applied) arrive a moment later.
+ */
+export function isInquiryLoaded(text: string) {
+  const f = parseLabeledText(text);
+  return !!clean(f['Inquiry Results|Application ID']) && !!clean(f['Inquiry Results|Date Applied']);
+}
+
+const joinLines = (a: string | null, b: string | null) => (a ? [a, b].filter(Boolean).join('\n') : null);
+
 export function parseInquiry(text: string): PermitDetail {
   const f = parseLabeledText(text);
   const get = (section: string, label: string) => clean(f[`${section}|${label}`]);
   const zip = get('Parcel Info', 'Zip Code');
+  // Under "Fax" the page may show a fax number, the contractor's "City, ST ZIP" line, or both.
+  const faxLines = (get('Primary Contractor Information', 'Fax') ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+  const contractorCityLine = faxLines.length && CITY_LINE.test(faxLines[faxLines.length - 1]) ? faxLines.pop()! : null;
+  const contractorFax = faxLines.join(', ') || null;
   return {
     app_id: get('Inquiry Results', 'Application ID'),
     permit_number: get('Inquiry Results', 'Permit Number'),
@@ -112,7 +151,15 @@ export function parseInquiry(text: string): PermitDetail {
     contractor_name: get('Primary Contractor Information', 'Name'),
     contractor_phone: get('Primary Contractor Information', 'Phone'),
     contractor_license: get('Primary Contractor Information', 'State Cert/Reg #'),
+    contractor_address: joinLines(get('Primary Contractor Information', 'Business Address'), contractorCityLine),
+    contractor_mailing_address: joinLines(get('Primary Contractor Information', 'Mailing Address'), contractorCityLine),
+    contractor_fax: contractorFax,
+    contractor_city_registration: get('Primary Contractor Information', 'City Registration #'),
+    parcel_address: get('Parcel Info', 'Parcel Address'),
+    legal_description: get('Legal Owner and Description (current)', 'Legal Description'),
     review_status: get('Administrative', 'Status'),
+    plans_review_status: get('Plans Review', 'Status'),
+    fields: groupFields(f),
   };
 }
 

@@ -3,7 +3,7 @@ import { PermitCard } from '@/components/PermitCard';
 import { feedStats, latestRun, listPermits, type Permit } from '@/lib/permits';
 import { TRADES, TRADE_INFO } from '@/lib/trades';
 import { longDate, timeAgo } from '@/lib/format';
-import { isDemo, usingSamplePermits } from '@/lib/demo';
+import { isDemo, openAccess, usingSamplePermits } from '@/lib/demo';
 
 export const revalidate = 900; // refresh the public preview every 15 minutes
 
@@ -27,6 +27,7 @@ const STEPS = [
 
 export default async function Home() {
   const { preview, stats, run } = await loadPreview();
+  const open = openAccess();
 
   return (
     <main>
@@ -42,8 +43,8 @@ export default async function Home() {
               gutter and blinds follow-on work, and filters it to your ZIP codes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/login?mode=signup" className="btn-hot text-base">
-                Set up your trade <span aria-hidden="true">→</span>
+              <Link href={open ? '/dashboard' : '/login?mode=signup'} className="btn-hot text-base">
+                {open ? 'Browse all permits' : 'Set up your trade'} <span aria-hidden="true">→</span>
               </Link>
               <a href="#latest" className="btn-ghost text-base">
                 See the preview
@@ -92,7 +93,7 @@ export default async function Home() {
         {preview.length > 0 ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {preview.map((p) => (
-              <PermitCard key={p.app_id} permit={p} />
+              <PermitCard key={p.app_id} permit={p} href={open ? `/permits/${encodeURIComponent(p.app_id)}` : undefined} />
             ))}
           </div>
         ) : (
@@ -149,8 +150,8 @@ export default async function Home() {
           <p className="mt-6 font-display text-5xl font-extrabold">
             $99<span className="text-lg font-semibold text-muted">/month</span>
           </p>
-          <Link href="/login?mode=signup" className="btn-hot mt-6 w-full text-base">
-            Create account to subscribe
+          <Link href={open ? '/dashboard' : '/login?mode=signup'} className="btn-hot mt-6 w-full text-base">
+            {open ? 'Browse all permits' : 'Create account to subscribe'}
           </Link>
         </div>
       </section>

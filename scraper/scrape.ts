@@ -6,11 +6,12 @@
  *   npm run scrape:dry    # test run: saves to scraper/output/dry-run.json, leaves the site's data alone
  *
  * Options (env): SEARCH_WINDOW = D30 | M3 | Y1 (default D30), MAX_PAGES (default 150),
- * MAX_DETAILS (default 400), DETAIL_DELAY_MS (default 1500), HEADFUL=1 to watch it run.
+ * MAX_DETAILS (default 1000), DETAIL_DELAY_MS (default 1500), HEADFUL=1 to watch it run,
+ * REFRESH_DETAILS=1 to re-read every permit's detail page instead of only new or changed ones.
  */
 import './env';
 import { chromium, type Page } from 'playwright';
-import { parseInquiry, parseListRow, type ListRow, type PermitDetail } from './parse';
+import { isInquiryLoaded, parseInquiry, parseListRow, type ListRow, type PermitDetail } from './parse';
 import { tagPermit } from '../lib/tags';
 import { JsonStore, SupabaseStore, type RunStats, type Store } from './store';
 
@@ -18,10 +19,12 @@ const BASE = 'https://ftgportal.sarasotafl.gov';
 const WINDOW = process.env.SEARCH_WINDOW ?? 'D30';
 const WINDOW_LABEL: Record<string, string> = { D30: 'Last 30 day(s)', M3: 'Last 3 month(s)', Y1: 'Last 1 year(s)' };
 const MAX_PAGES = Number(process.env.MAX_PAGES ?? 150);
-const MAX_DETAILS = Number(process.env.MAX_DETAILS ?? 400);
+const MAX_DETAILS = Number(process.env.MAX_DETAILS ?? 1000);
 const DETAIL_DELAY_MS = Number(process.env.DETAIL_DELAY_MS ?? 1500);
 const CONTACT = process.env.SCRAPER_CONTACT ?? 'permit-watch';
 const SAVE_EVERY = 20;
+// REFRESH_DETAILS=1 re-reads every listed permit's detail page (e.g. after the scraper learns new fields).
+const REFRESH_DETAILS = process.env.REFRESH_DETAILS === '1';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -95,13 +98,19 @@ async function collectList(page: Page): Promise<ListRow[]> {
 async function readDetail(page: Page, guid: string): Promise<{ detail: PermitDetail; url: string }> {
   const url = `${BASE}/Permits/Inquiry.aspx?source=1&id=${guid}&microapp=c`;
   await page.goto(url, { waitUntil: 'networkidle' });
-  // Detail fields are filled in by a background service call after load.
-  await page
-    .waitForFunction(() => /Work Type:\s*\n\s*\S/.test(document.body.innerText) || /Total Construction Amt/.test(document.body.innerText), null, {
-      timeout: 20_000,
-    })
-    .catch(() => {});
-  const text = await page.evaluate(() => document.body.innerText);
+  // The labels are on the page right away; a background call fills in the values a moment later.
+  // Poll until the record's values are there. A page that never fills in is skipped (not saved
+  // blank) and retried on the next run.
+  const deadline = Date.now() + 25_000;
+  let text = '';
+  for (;;) {
+    text = await page.evaluate(() => document.body.innerText);
+    if (isInquiryLoaded(text)) break;
+    if (Date.now() > deadline) throw new Error('detail page never finished loading');
+    await sleep(500);
+  }
+  await page.waitForLoadState('networkidle').catch(() => {});
+  text = await page.evaluate(() => document.body.innerText);
   return { detail: parseInquiry(text), url };
 }
 
@@ -136,6 +145,15 @@ function buildRecord(row: ListRow, detail: PermitDetail | null, detailUrl: strin
           contractor_name: detail.contractor_name,
           contractor_phone: detail.contractor_phone,
           contractor_license: detail.contractor_license,
+          contractor_address: detail.contractor_address,
+          contractor_mailing_address: detail.contractor_mailing_address,
+          contractor_fax: detail.contractor_fax,
+          contractor_city_registration: detail.contractor_city_registration,
+          parcel_address: detail.parcel_address,
+          legal_description: detail.legal_description,
+          review_status: detail.review_status,
+          plans_review_status: detail.plans_review_status,
+          fields: detail.fields,
           detail_url: detailUrl,
           detail_scraped_at: now,
         }
@@ -166,7 +184,7 @@ async function main() {
     const existing = await store.existing(rows.map((r) => r.app_id));
     const needsDetail = rows.filter((r) => {
       const e = existing.get(r.app_id);
-      return r.source_guid && (!e || !e.detail_scraped_at || e.status !== r.status);
+      return r.source_guid && (REFRESH_DETAILS || !e || !e.complete || e.status !== r.status);
     });
     const todo = needsDetail.slice(0, MAX_DETAILS);
     log(`${existing.size} already stored · ${needsDetail.length} new or changed · opening ${todo.length} detail pages`);

@@ -22,6 +22,16 @@ export type Permit = {
   contractor_name: string | null;
   contractor_phone: string | null;
   contractor_license: string | null;
+  contractor_address?: string | null;
+  contractor_mailing_address?: string | null;
+  contractor_fax?: string | null;
+  contractor_city_registration?: string | null;
+  city?: string | null;
+  parcel_address?: string | null;
+  legal_description?: string | null;
+  review_status?: string | null;
+  plans_review_status?: string | null;
+  fields?: Record<string, Record<string, string>> | null;
   valuation: number | null;
   tags: Trade[];
   tag_reasons: Partial<Record<Trade, string>>;
@@ -35,22 +45,24 @@ export type PermitQuery = {
   q?: string;
   days?: number;
   minValue?: number;
+  taggedOnly?: boolean;
   limit?: number;
   offset?: number;
 };
 
 const LIST_COLUMNS =
-  'id,app_id,permit_number,app_type,subtype,work_type,description,status,applied_date,issued_date,address,zip,contractor_company,valuation,tags,tag_reasons,detail_url,first_seen_at';
+  'id,app_id,permit_number,app_type,subtype,work_type,description,status,applied_date,issued_date,address,zip,owner_name,owner_address,contractor_company,contractor_name,contractor_phone,contractor_license,valuation,tags,tag_reasons,detail_url,first_seen_at';
 
 function listDemo(opts: PermitQuery) {
   const since = opts.days ? new Date(Date.now() - opts.days * 86_400_000).toISOString().slice(0, 10) : '';
   const term = (opts.q ?? '').trim().toUpperCase();
   const rows = localPermits()
     .filter((p) => !opts.trade || p.tags.includes(opts.trade))
+    .filter((p) => !opts.taggedOnly || p.tags.length > 0)
     .filter((p) => !opts.zips?.length || opts.zips.includes(p.zip ?? ''))
     .filter((p) => !since || (p.applied_date ?? '') >= since)
     .filter((p) => !opts.minValue || (p.valuation ?? 0) >= opts.minValue)
-    .filter((p) => !term || [p.address, p.description, p.contractor_company, p.app_id].some((v) => (v ?? '').toUpperCase().includes(term)));
+    .filter((p) => !term || [p.address, p.description, p.contractor_company, p.owner_name, p.app_id].some((v) => (v ?? '').toUpperCase().includes(term)));
   const offset = opts.offset ?? 0;
   return { permits: rows.slice(offset, offset + (opts.limit ?? 50)), count: rows.length };
 }
@@ -64,6 +76,7 @@ export async function listPermits(opts: PermitQuery) {
     .order('app_id', { ascending: false });
 
   if (opts.trade) q = q.contains('tags', [opts.trade]);
+  if (opts.taggedOnly) q = q.neq('tags', '{}');
   if (opts.zips?.length) q = q.in('zip', opts.zips);
   if (opts.days) {
     const since = new Date(Date.now() - opts.days * 86_400_000).toISOString().slice(0, 10);
@@ -73,7 +86,7 @@ export async function listPermits(opts: PermitQuery) {
   if (opts.q) {
     // Strip characters PostgREST uses in filter syntax.
     const term = opts.q.replace(/[%,()*\\]/g, ' ').trim();
-    if (term) q = q.or(`address.ilike.%${term}%,description.ilike.%${term}%,contractor_company.ilike.%${term}%,app_id.ilike.%${term}%`);
+    if (term) q = q.or(`address.ilike.%${term}%,description.ilike.%${term}%,contractor_company.ilike.%${term}%,owner_name.ilike.%${term}%,app_id.ilike.%${term}%`);
   }
   const limit = opts.limit ?? 50;
   const offset = opts.offset ?? 0;
@@ -116,6 +129,14 @@ export async function feedStats() {
     .limit(1)
     .maybeSingle();
   return { last30: count ?? 0, latestApplied: (data?.applied_date as string | undefined) ?? null };
+}
+
+/** ZIP codes that appear in the data, for the ZIP filter. */
+export async function distinctZips(): Promise<string[]> {
+  const zips = isDemo()
+    ? localPermits().map((p) => p.zip)
+    : ((await supabaseAdmin().from('permits').select('zip').not('zip', 'is', null).limit(10000)).data ?? []).map((r) => r.zip as string);
+  return [...new Set(zips.filter((z): z is string => !!z))].sort();
 }
 
 export const portalUrl = (p: Pick<Permit, 'detail_url'>) => p.detail_url ?? 'https://ftgportal.sarasotafl.gov/Permits/Search.aspx?microapp=c';

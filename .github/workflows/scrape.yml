@@ -1,0 +1,60 @@
+name: Daily permit import
+
+on:
+  schedule:
+    # 9:30 UTC = 5:30 AM EDT / 4:30 AM EST
+    - cron: '30 9 * * *'
+  workflow_dispatch:
+    inputs:
+      window:
+        description: 'Search window: D30 (30 days), M3 (3 months) or Y1 (1 year)'
+        default: 'D30'
+      max_details:
+        description: 'Most detail pages to open this run'
+        default: '1000'
+      refresh_details:
+        description: 'Re-read every permit, not just new or changed ones (1 = yes)'
+        default: '0'
+
+permissions:
+  contents: write # lets the job commit data/permits.json
+
+concurrency:
+  group: permit-import
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # Uses Supabase when its secrets are set; otherwise updates data/permits.json.
+      - run: npm run scrape
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SCRAPER_CONTACT: ${{ secrets.SCRAPER_CONTACT }}
+          SEARCH_WINDOW: ${{ inputs.window || 'D30' }}
+          MAX_DETAILS: ${{ inputs.max_details || '1000' }}
+          REFRESH_DETAILS: ${{ inputs.refresh_details || '0' }}
+
+      # Commit the refreshed file. The push makes Netlify redeploy with the new permits.
+      - name: Commit permits.json
+        run: |
+          if git diff --quiet -- data/permits.json; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "permit-watch-bot"
+          git config user.email "permit-watch-bot@users.noreply.github.com"
+          git add data/permits.json
+          git commit -m "Daily permit import $(date -u +%Y-%m-%d)"
+          git push

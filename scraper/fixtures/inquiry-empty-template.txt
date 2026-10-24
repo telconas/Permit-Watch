@@ -1,0 +1,128 @@
+Building and Engineering Permitting Online Services
+
+Home Search Search Results Inquiry
+
+Inquiry Results
+
+Application ID:
+Permit Number:
+Date Applied:
+Date Issued:
+Expiration Date:
+Date Completed:
+Parcel Info
+Parcel Address:
+Site Address:
+City:
+State:
+Zip Code:
+Legal Owner and Description (current)
+Below represents current parcel information from the property assessor's database. See Contact Info for ownership information during this application/permit.
+Owner Name(s):
+Owner(s) address:
+Legal Description:
+Permit Info
+Description of Work
+Location of Work:
+Type of Construction:
+1 Hour Protected:
+Census Item:
+Work Type:
+Work Description:
+Occupancy Use:
+Occupant Load:
+Type of Business:
+Total Construction Amt:
+Prepaid Amount:
+Conditions:
+Plans:
+De Minimis:
+Public/Private
+Additional Building Information
+# Buildings:
+# Units:
+# Stories:
+Entire Bldg (sqft):
+Floor Area (sqft):
+Tenant Area (sqft):
+Seating:
+Thres Bldg:
+Fire District:
+Sq_ft:
+Certificate of Occupancy Issued On:
+Temp CO Expires in Day(s):
+Temporary Certificate of Occupancy Issued On:
+Temp CO Conditions:
+Contact Info
+Owner Information
+Name:
+Address:
+Phone:
+Fax:
+Tenant:
+Fee Simple Title Holder Information
+Name:
+Address:
+Phone:
+Fax:
+Architect Information
+Name:
+Address:
+Phone:
+Fax:
+Engineer Information
+Name:
+Address:
+Phone:
+Fax:
+Mortgage Lender Information
+Name:
+Address:
+Phone:
+Fax:
+Local Contact Information
+Name:
+Address:
+Phone:
+Fax:
+Special Inspector Information
+Name:
+Address:
+Phone:
+Fax:
+Contractor
+Primary Contractor Information
+City Registration #:
+State Cert/Reg #:
+Name:
+Company:
+Business Address:
+Mailing Address:
+Phone:
+Fax:
+Zoning App.
+Zoning Information
+Finished Floor Certificate Required?
+Final Finished Floor Certificate Required?
+Minimum Finished Floor Elevation:
+Flood Zone:
+Zone:
+Dwell Units:
+Notes:
+Review
+Administrative
+Status:
+Received:
+Comments:
+Plans Review
+Status:
+Received:
+Comments:
+
+Inspections
+Request Date Inspection Date Field/Type By Status Fees
+
+Transmittals
+Transmittal Date Description
+
+Return to Search Results

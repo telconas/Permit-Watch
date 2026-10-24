@@ -24,6 +24,15 @@ create table if not exists public.permits (
   contractor_name    text,
   contractor_phone   text,
   contractor_license text,
+  contractor_address text,
+  contractor_mailing_address text,
+  contractor_fax     text,
+  contractor_city_registration text,
+  parcel_address     text,
+  legal_description  text,
+  review_status      text,
+  plans_review_status text,
+  fields             jsonb,                         -- every non-empty field from the city page, by section
   valuation          numeric,
   tags               text[] not null default '{}',  -- landscaping | fence | pool | gutters | blinds
   tag_reasons        jsonb  not null default '{}',  -- { "gutters": "Re-roof" }

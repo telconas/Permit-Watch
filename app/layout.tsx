@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
-import { isDemo, usingSamplePermits } from '@/lib/demo';
+import { isDemo, openAccess, usingSamplePermits } from '@/lib/demo';
 
 export const metadata: Metadata = {
   title: 'Permit Watch Sarasota — permits sorted for your trade',
@@ -30,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Demo mode with sample permits. Run <code className="font-mono">npm run scrape:json</code> to load real ones.
               </>
             ) : (
-              'Preview mode: real City of Sarasota permits. Sign-in and checkout are demo-only; no accounts or payments are real.'
+              openAccess()
+                ? 'Open preview: every City of Sarasota permit is visible, no sign-in needed.'
+                : 'Preview mode: real City of Sarasota permits. Sign-in and checkout are demo-only; no accounts or payments are real.'
             )}
           </div>
         )}

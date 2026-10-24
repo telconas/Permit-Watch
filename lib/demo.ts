@@ -177,3 +177,15 @@ export function localLastRun() {
   }
   return (permitsFile as unknown as FileShape).lastRun;
 }
+
+/**
+ * Open access: anyone can browse every permit and detail page, no sign-in or paywall.
+ * OPEN_ACCESS=true forces it on, OPEN_ACCESS=false forces it off; unset, it's on until
+ * accounts (Supabase) are connected.
+ */
+export function openAccess() {
+  const flag = process.env.OPEN_ACCESS?.toLowerCase();
+  if (flag === 'true') return true;
+  if (flag === 'false') return false;
+  return isDemo();
+}

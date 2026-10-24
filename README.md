@@ -25,7 +25,9 @@ Run `npm run scrape:json` again any day to add new applications and refresh chan
 2. In GitHub → Actions → **Daily permit import** → **Run workflow**. It scrapes, commits the updated `data/permits.json`, and that commit makes Netlify redeploy.
 3. From then on it runs every morning at 5:30 AM ET by itself.
 
-To pull more history once, run the workflow with window `M3` (3 months) or `Y1` (1 year), or locally `SEARCH_WINDOW=M3 npm run scrape:json`. If a run has more new permits than `MAX_DETAILS` (400), the rest are picked up the next day.
+To pull more history once, run the workflow with window `M3` (3 months) or `Y1` (1 year), or locally `SEARCH_WINDOW=M3 npm run scrape:json`. If a run has more new permits than `MAX_DETAILS` (1000), the rest are picked up the next day.
+
+**Open access.** Until accounts are connected, the site is fully open: no sign-in or paywall, every permit and detail page visible, filters for trade, ZIP, date, value and tagged-only, a table view with every column, and **Download CSV** (exports whatever the current filters show). To control it explicitly, set `OPEN_ACCESS=true` or `OPEN_ACCESS=false` in Netlify's environment variables. Unset, it's open until the Supabase keys are added.
 
 When you're ready for real accounts and payments, follow the setup below. Once the Supabase keys are set, the scraper and the site switch to the database automatically.
 

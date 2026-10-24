@@ -6,6 +6,9 @@ import { isSubscribed, requireSession } from '@/lib/session';
 import { latestRun, listPermits } from '@/lib/permits';
 import { TRADE_INFO } from '@/lib/trades';
 import { timeAgo } from '@/lib/format';
+import { OpenBrowser } from '@/components/OpenBrowser';
+import { openAccess } from '@/lib/demo';
+import type { BrowseParams } from '@/lib/browse';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,10 +20,11 @@ const DAY_OPTIONS = [
   { value: '90', label: '90 days' },
 ];
 
-type SP = { view?: string; q?: string; days?: string; min?: string; page?: string; welcome?: string; checkout?: string };
+type SP = BrowseParams & { view?: string; welcome?: string; checkout?: string };
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
+  if (openAccess()) return <OpenBrowser sp={sp} />;
   const { profile } = await requireSession('/dashboard');
   if (!profile.trade || !profile.zips?.length) redirect('/onboarding');
 
