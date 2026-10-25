@@ -46,3 +46,20 @@ test('JSON store: first run inserts, later runs update and keep history', async 
   // One permit per line keeps git diffs small.
   assert.equal(readFileSync(path, 'utf8').split('\n').filter((l) => l.startsWith('{"')).length, 2);
 });
+
+test('JSON store: counts failed detail attempts and keeps the permit listed', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'pw-')), 'permits.json');
+  const s = new JsonStore(path);
+  await s.start();
+  // A new permit whose detail page failed is still saved from the list row.
+  assert.equal(await s.put({ app_id: '2027-000889', status: 'Pending Plan Review', address: '300 AUTOBON PL', detail_failures: 1 }, false), 'inserted');
+  await s.put({ app_id: '2027-000889', status: 'Pending Plan Review', detail_failures: 3 }, false);
+  await s.finish({ listed: 1, inserted: 1, updated: 1 });
+
+  const again = new JsonStore(path);
+  await again.start();
+  const e = (await again.existing(['2027-000889'])).get('2027-000889');
+  assert.equal(e?.failures, 3);
+  assert.equal(e?.complete, false);
+  assert.equal(readPermitsFile(path).permits[0].address, '300 AUTOBON PL', 'list-level fields kept');
+});

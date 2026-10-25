@@ -6,7 +6,7 @@ import { dirname } from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /** complete = the stored record has the full detail page (all fields). */
-export type Existing = { app_id: string; status: string | null; detail_scraped_at: string | null; complete: boolean };
+export type Existing = { app_id: string; status: string | null; detail_scraped_at: string | null; complete: boolean; failures: number };
 export type RunStats = { listed: number; inserted: number; updated: number };
 export type StoredRecord = Record<string, unknown> & { app_id: string; status?: string | null };
 
@@ -77,6 +77,7 @@ export class JsonStore implements Store {
           status: (p.status as string) ?? null,
           detail_scraped_at: (p.detail_scraped_at as string) ?? null,
           complete: !!p.detail_scraped_at && !!p.fields,
+          failures: Number(p.detail_failures ?? 0) || 0,
         });
     }
     return map;
@@ -130,10 +131,10 @@ export class SupabaseStore implements Store {
   async existing(ids: string[]) {
     const map = new Map<string, Existing>();
     for (let i = 0; i < ids.length; i += 200) {
-      const { data, error } = await this.db.from('permits').select('app_id,status,detail_scraped_at,fields').in('app_id', ids.slice(i, i + 200));
+      const { data, error } = await this.db.from('permits').select('app_id,status,detail_scraped_at,fields,detail_failures').in('app_id', ids.slice(i, i + 200));
       if (error) throw error;
       for (const r of data ?? []) {
-        map.set(r.app_id, { app_id: r.app_id, status: r.status, detail_scraped_at: r.detail_scraped_at, complete: !!r.detail_scraped_at && !!r.fields });
+        map.set(r.app_id, { app_id: r.app_id, status: r.status, detail_scraped_at: r.detail_scraped_at, complete: !!r.detail_scraped_at && !!r.fields, failures: r.detail_failures ?? 0 });
         this.known.set(r.app_id, r.status);
       }
     }

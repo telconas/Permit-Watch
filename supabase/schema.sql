@@ -38,6 +38,7 @@ create table if not exists public.permits (
   tag_reasons        jsonb  not null default '{}',  -- { "gutters": "Re-roof" }
   detail_url         text,
   detail_scraped_at  timestamptz,
+  detail_failures    int not null default 0,          -- consecutive failed attempts to read the detail page
   first_seen_at      timestamptz not null default now(),
   last_seen_at       timestamptz not null default now(),
   status_changed_at  timestamptz,

@@ -9,7 +9,7 @@ const td = 'px-3 py-3 align-top';
 export function PermitTable({ permits, newCutoff }: { permits: Permit[]; newCutoff: number }) {
   return (
     <div className="card overflow-x-auto">
-      <table className="w-full min-w-[1100px] border-collapse text-sm">
+      <table className="w-full min-w-[1400px] border-collapse text-sm">
         <thead className="bg-ground">
           <tr>
             <th scope="col" className={th}>Application</th>
@@ -45,7 +45,11 @@ export function PermitTable({ permits, newCutoff }: { permits: Permit[]; newCuto
                 <div className="font-medium whitespace-nowrap">{p.address}</div>
                 <div className="text-xs text-muted">{p.zip}</div>
               </td>
-              <td className={`${td} max-w-[320px] text-ink-2`}>{titleCase(p.description)}</td>
+              <td className={`${td} min-w-[320px] max-w-[420px] text-ink-2`}>
+                <span className="line-clamp-4" title={p.description ?? undefined}>
+                  {titleCase(p.description)}
+                </span>
+              </td>
               <td className={`${td} text-right whitespace-nowrap tabular-nums`}>{money(p.valuation)}</td>
               <td className={td}>
                 <div className="whitespace-nowrap">{p.contractor_company}</div>

@@ -154,8 +154,9 @@ export default async function PermitPage({ params }: { params: Promise<{ appId: 
           </div>
         ) : (
           <p className="mt-2 text-sm text-ink-2">
-            This permit was imported before the scraper saved every field. The next daily import fills it in automatically. Until
-            then, the city record link above has the full page.
+            {(p.detail_failures ?? 0) >= 3
+              ? "The city's portal doesn't show the full record for this application type, so only the details from the search list are available."
+              : 'The full record for this permit hasn’t been read yet. The next daily import fills it in automatically. Until then, the city record link above has the full page.'}
           </p>
         )}
       </section>

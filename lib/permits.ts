@@ -32,6 +32,7 @@ export type Permit = {
   review_status?: string | null;
   plans_review_status?: string | null;
   fields?: Record<string, Record<string, string>> | null;
+  detail_failures?: number | null;
   valuation: number | null;
   tags: Trade[];
   tag_reasons: Partial<Record<Trade, string>>;

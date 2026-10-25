@@ -23,6 +23,9 @@ const MAX_DETAILS = Number(process.env.MAX_DETAILS ?? 1000);
 const DETAIL_DELAY_MS = Number(process.env.DETAIL_DELAY_MS ?? 1500);
 const CONTACT = process.env.SCRAPER_CONTACT ?? 'permit-watch';
 const SAVE_EVERY = 20;
+// After this many failed attempts a permit's detail page is left alone (some record types never
+// load on the city's portal). A status change tries it again.
+const MAX_DETAIL_FAILURES = 3;
 // REFRESH_DETAILS=1 re-reads every listed permit's detail page (e.g. after the scraper learns new fields).
 const REFRESH_DETAILS = process.env.REFRESH_DETAILS === '1';
 
@@ -184,8 +187,15 @@ async function main() {
     const existing = await store.existing(rows.map((r) => r.app_id));
     const needsDetail = rows.filter((r) => {
       const e = existing.get(r.app_id);
-      return r.source_guid && (REFRESH_DETAILS || !e || !e.complete || e.status !== r.status);
+      if (!r.source_guid) return false;
+      if (REFRESH_DETAILS || !e || e.status !== r.status) return true;
+      return !e.complete && e.failures < MAX_DETAIL_FAILURES;
     });
+    const givenUp = rows.filter((r) => {
+      const e = existing.get(r.app_id);
+      return e && !e.complete && e.failures >= MAX_DETAIL_FAILURES && e.status === r.status;
+    }).length;
+    if (givenUp) log(`${givenUp} permits skipped: their detail pages failed ${MAX_DETAIL_FAILURES}+ times on the city portal`);
     const todo = needsDetail.slice(0, MAX_DETAILS);
     log(`${existing.size} already stored · ${needsDetail.length} new or changed · opening ${todo.length} detail pages`);
 
@@ -198,17 +208,24 @@ async function main() {
 
     // 2. New or changed permits: read the full record. Progress is saved as we go.
     let done = 0;
-    for (const row of todo) {
+    let failed = 0;
+    for (const [i, row] of todo.entries()) {
       try {
         const { detail, url } = await readDetail(page, row.source_guid!);
-        count(await store.put(buildRecord(row, detail, url), true));
+        count(await store.put({ ...buildRecord(row, detail, url), detail_failures: 0 }, true));
         log(`  ${++done}/${todo.length} ${row.app_id} ${row.subtype} · ${detail.zip ?? '?'} · ${detail.valuation ?? '-'}`);
       } catch (err) {
-        log(`  ${row.app_id} detail failed, will retry next run: ${(err as Error).message}`);
+        // Still save the list-level record so the permit shows on the site, and count the failure.
+        const prev = existing.get(row.app_id);
+        const failures = (prev && prev.status === row.status ? prev.failures : 0) + 1;
+        count(await store.put({ ...buildRecord(row, null, null), detail_failures: failures }, false));
+        failed++;
+        log(`  ${row.app_id} detail failed (${failures}/${MAX_DETAIL_FAILURES}): ${(err as Error).message}`);
       }
-      if (done % SAVE_EVERY === 0) await store.flush();
+      if ((i + 1) % SAVE_EVERY === 0) await store.flush();
       await sleep(DETAIL_DELAY_MS);
     }
+    if (failed) log(`${failed} detail pages failed this run`);
     if (needsDetail.length > todo.length) log(`${needsDetail.length - todo.length} left for the next run (MAX_DETAILS=${MAX_DETAILS})`);
 
     await store.finish(stats);
