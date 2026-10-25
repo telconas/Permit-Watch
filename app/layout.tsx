@@ -20,6 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
         />
+        {/* Site analytics */}
+        <script src="https://simple-analytics-das-kndy.bolt.host/tracker.js" data-site="https://permit-watch.netlify.app/" defer />
       </head>
       <body className="flex min-h-screen flex-col">
         <SiteHeader />
