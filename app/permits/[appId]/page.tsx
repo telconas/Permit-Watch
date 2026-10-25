@@ -4,8 +4,9 @@ import { getPermit, portalUrl } from '@/lib/permits';
 import { TRADE_INFO } from '@/lib/trades';
 import { CATEGORY_LABEL, STAGE_LABEL, categorize } from '@/lib/classify';
 import { toRec } from '@/lib/search-core';
-import { longDate, money, readable, titleCase } from '@/lib/format';
+import { longDate, money, readable, titleCase, zillowUrl } from '@/lib/format';
 import { BackLink } from '@/components/BackLink';
+import { SaveButton } from '@/components/saved/SaveButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,7 @@ export default async function PermitPage({ params }: { params: Promise<{ appId: 
   const city = titleCase(p.city) || 'Sarasota';
   const fullAddress = [p.address, `${city}, FL ${p.zip ?? ''}`.trim()].filter(Boolean).join(', ');
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+  const zillow = zillowUrl(p.address, p.zip, city);
   const sections = Object.entries(p.fields ?? {});
 
   return (
@@ -81,6 +83,13 @@ export default async function PermitPage({ params }: { params: Promise<{ appId: 
           <a className="btn-primary" href={maps} target="_blank" rel="noreferrer">
             Open in Maps
           </a>
+          {zillow && (
+            <a className="btn-ghost" href={zillow} target="_blank" rel="noopener noreferrer">
+              Zillow
+              <span aria-hidden="true">↗</span>
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          )}
           <a className="btn-ghost" href={portalUrl(p)} target="_blank" rel="noreferrer">
             City record
           </a>
@@ -89,6 +98,7 @@ export default async function PermitPage({ params }: { params: Promise<{ appId: 
               Call contractor
             </a>
           )}
+          <SaveButton rec={rec} />
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -130,7 +140,14 @@ export default async function PermitPage({ params }: { params: Promise<{ appId: 
       </Section>
 
       <Section title="Property">
-        <Row label="Site address">{fullAddress}</Row>
+        <Row label="Site address">
+          {fullAddress}
+          {zillow && (
+            <a className="ml-3 text-sm font-semibold text-brand underline" href={zillow} target="_blank" rel="noopener noreferrer">
+              View on Zillow ↗
+            </a>
+          )}
+        </Row>
         <Row label="Parcel address">{p.parcel_address && p.parcel_address !== p.address ? p.parcel_address : null}</Row>
         <Row label="Legal description">{p.legal_description}</Row>
         <Row label="Owner">{p.owner_name}</Row>

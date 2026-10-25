@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
+import { SavedLink } from './saved/SaveButton';
 
 export function SiteHeader() {
   return (
@@ -8,7 +9,10 @@ export function SiteHeader() {
         <Link href="/" aria-label="Permit Watch, search home">
           <Logo />
         </Link>
-        <p className="hidden text-sm text-muted sm:block">Every City of Sarasota building permit, searchable</p>
+        <div className="flex items-center gap-3">
+          <p className="hidden text-sm text-muted md:block">Every City of Sarasota building permit, searchable</p>
+          <SavedLink />
+        </div>
       </div>
     </header>
   );

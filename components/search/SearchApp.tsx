@@ -9,6 +9,7 @@ import { money, readable, shortDate } from '@/lib/format';
 import { highlight } from './highlight';
 import { registerVisit } from './visits';
 import { rememberSearch } from './nav';
+import { SaveStar } from '@/components/saved/SaveButton';
 
 const PAGE = 40;
 
@@ -361,12 +362,12 @@ function dateLine(r: Rec) {
 
 const isNew = (r: Rec, lastVisit: string | null) => !!lastVisit && r.fs > lastVisit;
 
-function ResultList({ hits, lastVisit }: { hits: Hit[]; lastVisit: string | null }) {
+export function ResultList({ hits, lastVisit }: { hits: Hit[]; lastVisit: string | null }) {
   return (
     <ul className="card divide-y divide-line overflow-hidden">
       {hits.map(({ rec: r, terms }) => (
-        <li key={r.id}>
-          <Link href={`/permits/${encodeURIComponent(r.id)}`} onClick={() => rememberSearch(r.id)} className="block px-4 py-3.5 hover:bg-ground/70 focus-visible:bg-ground/70 sm:px-5">
+        <li key={r.id} className="relative">
+          <Link href={`/permits/${encodeURIComponent(r.id)}`} onClick={() => rememberSearch(r.id)} className="block py-3.5 pr-14 pl-4 hover:bg-ground/70 focus-visible:bg-ground/70 sm:pl-5">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <span className="rounded-md bg-brand-soft px-2 py-0.5 font-semibold text-brand-dark">{CATEGORY_LABEL[r.ca[0]]}</span>
               <span className={`rounded-md px-2 py-0.5 font-semibold ${STAGE_STYLE[r.sg]}`}>{STAGE_LABEL[r.sg]}</span>
@@ -385,6 +386,7 @@ function ResultList({ hits, lastVisit }: { hits: Hit[]; lastVisit: string | null
               <span className="font-mono text-xs leading-5">{highlight(r.id, terms)}</span>
             </p>
           </Link>
+          <SaveStar rec={r} className="absolute top-1/2 right-2 -translate-y-1/2 sm:right-3" />
         </li>
       ))}
     </ul>
@@ -415,6 +417,7 @@ function ResultTable({ hits, lastVisit }: { hits: Hit[]; lastVisit: string | nul
           {hits.map(({ rec: r, terms }) => (
             <tr key={r.id} className="border-t border-line hover:bg-ground/60">
               <td className={`${td} whitespace-nowrap`}>
+                <SaveStar rec={r} className="-my-2 mr-1 -ml-2 align-middle" />
                 <Link href={`/permits/${encodeURIComponent(r.id)}`} onClick={() => rememberSearch(r.id)} className="font-mono font-medium text-brand hover:underline">
                   {highlight(r.id, terms)}
                 </Link>

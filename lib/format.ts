@@ -58,3 +58,16 @@ export function easternDateTime(iso: string | null | undefined) {
     minute: '2-digit',
   });
 }
+
+/**
+ * Zillow's address search. Lands on the home's own page when Zillow knows the address,
+ * otherwise on search results for it.
+ */
+export function zillowUrl(address: string | null | undefined, zip?: string | null, city = 'Sarasota') {
+  if (!address) return null;
+  const slug = [address, city, `FL ${zip ?? ''}`.trim()]
+    .map((part) => part.replace(/[^A-Za-z0-9#\- ]+/g, ' ').trim().replace(/\s+/g, '-'))
+    .filter(Boolean)
+    .join(',-');
+  return `https://www.zillow.com/homes/${encodeURIComponent(slug).replace(/%2C/g, ',')}_rb/`;
+}
