@@ -23,6 +23,10 @@ test('contractor with a fax number and a city line under it', () => {
   assert.equal(d.contractor_address, '6311 PORTER RD SUITE 8\nSARASOTA FL 34240');
   assert.equal(d.contractor_city_registration, 'CR-13635');
   assert.equal(d.owner_name, 'SAMPLE OWNER A, SAMPLE OWNER B');
+  // The city website's footer after the record must not leak into any field.
+  const values = Object.values(d.fields).flatMap((sec) => Object.values(sec)).join('\n');
+  assert.doesNotMatch(values, /Return to Search Results|Powered By|City Hall/);
+  assert.equal(d.fields['Plans Review']['Status'], 'Pending Plan Review');
 });
 
 test('parses a real inquiry page', () => {

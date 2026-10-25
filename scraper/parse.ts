@@ -27,11 +27,17 @@ const SECTION_HEADINGS = new Set([
   'Transmittals',
 ]);
 
+const END_MARKERS = new Set(['Return to Search Results', 'Inspections', 'Transmittals', 'Powered By']);
+
 const isLabel = (line: string) => /[:?]$/.test(line) || line === 'Public/Private';
 
 /** Turns the inquiry page text into { "Section|Label": "value" }. */
 export function parseLabeledText(text: string): Record<string, string> {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const all = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  // The record ends at the inspections table or the "Return to Search Results" link; everything
+  // after that is the city website's footer.
+  const end = all.findIndex((l) => END_MARKERS.has(l));
+  const lines = end === -1 ? all : all.slice(0, end);
   const out: Record<string, string> = {};
   let section = 'Inquiry Results';
   for (let i = 0; i < lines.length; i++) {
