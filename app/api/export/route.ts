@@ -47,10 +47,13 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const params = readParams((k) => url.searchParams.get(k));
   const since = url.searchParams.get('since');
+  // Saved permits live in the browser, so the page sends their IDs along.
+  const ids = url.searchParams.get('ids');
+  const savedIds = params.saved ? new Set((ids ?? '').split(',').filter(Boolean).slice(0, 2000)) : null;
   const recs = searchRecords();
   index ??= buildIndex(recs);
   const byId = new Map(recs.map((r) => [r.id, r]));
-  const { hits } = runSearch(index, recs, byId, params, { now: new Date(), lastVisit: since && !Number.isNaN(Date.parse(since)) ? since : null });
+  const { hits } = runSearch(index, recs, byId, params, { now: new Date(), lastVisit: since && !Number.isNaN(Date.parse(since)) ? since : null, savedIds });
 
   const lines = [COLUMNS.map(([h]) => h).join(',')];
   for (const { rec } of hits) {

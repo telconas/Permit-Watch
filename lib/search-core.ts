@@ -128,9 +128,10 @@ export type Params = {
   lead: Trade | null;
   sort: SortId;
   fresh: boolean; // only "new since your last visit"
+  saved: boolean; // only permits saved in this browser
 };
 
-export const DEFAULT_PARAMS: Params = { q: '', cat: null, stage: 'active', zip: null, days: 0, min: 0, lead: null, sort: 'best', fresh: false };
+export const DEFAULT_PARAMS: Params = { q: '', cat: null, stage: 'active', zip: null, days: 0, min: 0, lead: null, sort: 'best', fresh: false, saved: false };
 
 /** URL query string ⇄ Params. Shared links and bookmarks depend on these names staying stable. */
 export function readParams(get: (k: string) => string | null): Params {
@@ -146,6 +147,7 @@ export function readParams(get: (k: string) => string | null): Params {
     lead: isTrade(get('lead')) ? (get('lead') as Trade) : null,
     sort: sort === 'newest' || sort === 'finished' || sort === 'value' ? sort : 'best',
     fresh: get('new') === '1',
+    saved: get('saved') === '1',
   };
 }
 
@@ -160,6 +162,7 @@ export function writeParams(p: Params): string {
   if (p.lead) u.set('lead', p.lead);
   if (p.sort !== 'best') u.set('sort', p.sort);
   if (p.fresh) u.set('new', '1');
+  if (p.saved) u.set('saved', '1');
   return u.toString();
 }
 
@@ -167,10 +170,14 @@ export type Hit = { rec: Rec; terms: string[]; score: number };
 
 type Skip = 'cat' | 'stage' | null;
 
-function passes(r: Rec, p: Params, ctx: { since: string; lastVisit: string | null }, skip: Skip) {
+type Ctx = { since: string; lastVisit: string | null; savedIds: Set<string> | null };
+
+function passes(r: Rec, p: Params, ctx: Ctx, skip: Skip) {
+  if (p.saved && !ctx.savedIds?.has(r.id)) return false;
   if (skip !== 'cat' && p.cat && !r.ca.includes(p.cat)) return false;
   if (skip !== 'stage') {
-    if (p.stage === 'active' && r.sg === 'inactive') return false;
+    // Saved permits stay visible even after they're withdrawn or expire.
+    if (p.stage === 'active' && r.sg === 'inactive' && !p.saved) return false;
     if (p.stage !== 'active' && p.stage !== 'all' && r.sg !== p.stage) return false;
   }
   if (p.zip && r.zp !== p.zip) return false;
@@ -192,6 +199,7 @@ export type Outcome = {
   categoryCounts: Partial<Record<CategoryId, number>>;
   stageCounts: Partial<Record<StageId | 'active' | 'all', number>>;
   freshCount: number;
+  savedCount: number;
   /** True when nothing matched exactly and these are close spellings instead. */
   loosened: boolean;
 };
@@ -205,10 +213,10 @@ export function runSearch(
   recs: Rec[],
   byId: Map<string, Rec>,
   p: Params,
-  opts: { now: Date; lastVisit: string | null },
+  opts: { now: Date; lastVisit: string | null; savedIds?: Set<string> | null },
 ): Outcome {
   const since = new Date(opts.now.getTime() - p.days * 86_400_000).toISOString().slice(0, 10);
-  const ctx = { since, lastVisit: opts.lastVisit };
+  const ctx: Ctx = { since, lastVisit: opts.lastVisit, savedIds: opts.savedIds ?? null };
 
   let pool: Hit[];
   let loosened = false;
@@ -228,6 +236,7 @@ export function runSearch(
   const categoryCounts: Outcome['categoryCounts'] = {};
   const stageCounts: Outcome['stageCounts'] = {};
   let freshCount = 0;
+  let savedCount = 0;
   const hits: Hit[] = [];
   for (const h of pool) {
     const r = h.rec;
@@ -235,9 +244,10 @@ export function runSearch(
     if (passes(r, p, ctx, 'stage')) {
       stageCounts[r.sg] = (stageCounts[r.sg] ?? 0) + 1;
       stageCounts.all = (stageCounts.all ?? 0) + 1;
-      if (r.sg !== 'inactive') stageCounts.active = (stageCounts.active ?? 0) + 1;
+      if (r.sg !== 'inactive' || p.saved) stageCounts.active = (stageCounts.active ?? 0) + 1;
     }
     if (passes(r, { ...p, fresh: false }, ctx, null) && opts.lastVisit && r.fs > opts.lastVisit) freshCount++;
+    if (ctx.savedIds?.has(r.id) && passes(r, { ...p, saved: true }, ctx, null)) savedCount++;
     if (passes(r, p, ctx, null)) hits.push(h);
   }
 
@@ -247,5 +257,5 @@ export function runSearch(
   else if (sort === 'value') hits.sort((a, b) => (b.rec.va ?? -1) - (a.rec.va ?? -1) || byNewest(a.rec, b.rec));
   // 'best' with a query keeps MiniSearch's relevance order.
 
-  return { hits, categoryCounts, stageCounts, freshCount, loosened };
+  return { hits, categoryCounts, stageCounts, freshCount, savedCount, loosened };
 }

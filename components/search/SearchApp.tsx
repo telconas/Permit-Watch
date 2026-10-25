@@ -10,6 +10,7 @@ import { highlight } from './highlight';
 import { registerVisit } from './visits';
 import { rememberSearch } from './nav';
 import { SaveStar } from '@/components/saved/SaveButton';
+import { useSaved } from '@/components/saved/store';
 
 const PAGE = 40;
 
@@ -128,14 +129,16 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
 
   // Typing stays smooth: the results catch up a moment behind the keystrokes.
   const deferred = useDeferredValue(params);
+  const saved = useSaved();
+  const savedIds = useMemo(() => new Set(saved.map((s) => s.id)), [saved]);
   const outcome = useMemo(
-    () => (recs ? runSearch(index, recs, byId, deferred, { now: new Date(), lastVisit }) : null),
-    [recs, index, byId, deferred, lastVisit],
+    () => (recs ? runSearch(index, recs, byId, deferred, { now: new Date(), lastVisit, savedIds }) : null),
+    [recs, index, byId, deferred, lastVisit, savedIds],
   );
 
   const filtered =
-    params.q.trim() !== '' || params.cat || params.stage !== 'active' || params.zip || params.days || params.min || params.lead || params.fresh;
-  const exportHref = `/api/export?${writeParams(params)}${params.fresh && lastVisit ? `&since=${encodeURIComponent(lastVisit)}` : ''}`;
+    params.q.trim() !== '' || params.cat || params.stage !== 'active' || params.zip || params.days || params.min || params.lead || params.fresh || params.saved;
+  const exportHref = `/api/export?${writeParams(params)}${params.fresh && lastVisit ? `&since=${encodeURIComponent(lastVisit)}` : ''}${params.saved ? `&ids=${saved.map((s) => encodeURIComponent(s.id)).join(',')}` : ''}`;
 
   return (
     <main className="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
@@ -185,6 +188,11 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
       {/* Stage */}
       <div className="mt-4 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Stage">
         <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+          {(saved.length > 0 || params.saved) && (
+            <Chip brand active={params.saved} onClick={() => update({ saved: !params.saved })} count={outcome?.savedCount ?? saved.length} title="Permits you've saved in this browser">
+              <span aria-hidden="true">★</span> Saved
+            </Chip>
+          )}
           <Chip active={params.stage === 'active'} onClick={() => update({ stage: 'active' })} count={outcome?.stageCounts.active}>
             All active
           </Chip>
@@ -301,8 +309,17 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
           )
         ) : outcome.hits.length === 0 ? (
           <div className="card p-6 text-ink-2">
-            <p className="font-semibold text-ink">No permits match.</p>
-            <p className="mt-1 text-sm">Try fewer words, a different spelling, or clear a filter.</p>
+            {params.saved && saved.length === 0 ? (
+              <>
+                <p className="font-semibold text-ink">Nothing saved yet.</p>
+                <p className="mt-1 text-sm">Tap the star on any permit to keep it here.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-ink">No permits match.</p>
+                <p className="mt-1 text-sm">Try fewer words, a different spelling, or clear a filter.</p>
+              </>
+            )}
           </div>
         ) : view === 'table' ? (
           <ResultTable hits={outcome.hits.slice(0, limit)} lastVisit={lastVisit} />
@@ -323,10 +340,14 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
 
 // ------------------------------------------------------------------ pieces
 
-function Chip(props: { active: boolean; onClick: () => void; count?: number; children: React.ReactNode; subtle?: boolean; accent?: boolean; title?: string }) {
-  const { active, onClick, count, children, subtle, accent, title } = props;
+function Chip(props: { active: boolean; onClick: () => void; count?: number; children: React.ReactNode; subtle?: boolean; accent?: boolean; brand?: boolean; title?: string }) {
+  const { active, onClick, count, children, subtle, accent, brand, title } = props;
   const base = 'inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition-colors';
-  const tone = active
+  const tone = brand
+    ? active
+      ? 'border-brand bg-brand text-white'
+      : 'border-brand/40 bg-brand-soft text-brand-dark hover:border-brand'
+    : active
     ? accent
       ? 'border-hot bg-hot text-white'
       : 'border-ink bg-ink text-white'

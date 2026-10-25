@@ -27,7 +27,7 @@ There is no database. `data/permits.json` holds the permits; the scraper only ev
 - **Categories and stages** (`lib/classify.ts`): worked out from the city's type, subtype, work type and description. The city's subtype wins over description words. Tests with real descriptions in `lib/classify.test.ts`.
 - **Lead tags** (`lib/tags.ts`): likely follow-on work (a re-roof suggests gutters; a new pool suggests fence, landscaping, screen enclosure). Not confirmed jobs.
 - **New since your last visit**: remembered in the visitor's own browser; a gap of 30+ minutes starts a new visit. First-time visitors get "New today" instead.
-- **Saved permits** (`components/saved/`): the star on a result, or Save on a permit page, adds it to `/saved`. Stored in the visitor's own browser only (localStorage), never sent to the server; the list can be downloaded as CSV.
+- **Saved permits** (`components/saved/`): the star on a result, or Save on a permit page, adds it to `/saved`. Stored in the visitor's own browser only (localStorage), never sent to the server; the list can be downloaded as CSV. On the search page, the ★ Saved chip (`?saved=1`) narrows any search to saved permits, withdrawn ones included.
 - **Zillow**: each permit page links to Zillow's address search for the site address, in a new tab.
 - Every search has its own URL (`/?q=pool&cat=pool&stage=finished&zip=34236`), so searches can be bookmarked and shared.
 - Permit pages are kept out of Google (`noindex`) because they carry owner names; they stay fully visible and searchable on the site.
