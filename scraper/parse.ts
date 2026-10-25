@@ -63,6 +63,8 @@ export type PermitDetail = {
   permit_number: string | null;
   applied_date: string | null;
   issued_date: string | null;
+  completed_date: string | null;
+  expiration_date: string | null;
   address: string | null;
   city: string | null;
   zip: string | null;
@@ -145,6 +147,8 @@ export function parseInquiry(text: string): PermitDetail {
     permit_number: get('Inquiry Results', 'Permit Number'),
     applied_date: toIsoDate(get('Inquiry Results', 'Date Applied')),
     issued_date: toIsoDate(get('Inquiry Results', 'Date Issued')),
+    completed_date: toIsoDate(get('Inquiry Results', 'Date Completed')),
+    expiration_date: toIsoDate(get('Inquiry Results', 'Expiration Date')),
     address: get('Parcel Info', 'Site Address') ?? get('Parcel Info', 'Parcel Address'),
     city: get('Parcel Info', 'City'),
     zip: zip ? zip.slice(0, 5) : null,

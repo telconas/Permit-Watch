@@ -1,8 +1,7 @@
 /**
  * Daily import from the City of Sarasota permit portal (FastTrackGov).
  *
- *   npm run scrape        # saves to Supabase if its keys are set, otherwise to data/permits.json
- *   npm run scrape:json   # always saves to data/permits.json (what the website reads with no database)
+ *   npm run scrape        # updates data/permits.json, which the website reads
  *   npm run scrape:dry    # test run: saves to scraper/output/dry-run.json, leaves the site's data alone
  *
  * Options (env): SEARCH_WINDOW = D30 | M3 | Y1 (default D30), MAX_PAGES (default 150),
@@ -13,7 +12,7 @@ import './env';
 import { chromium, type Page } from 'playwright';
 import { isInquiryLoaded, parseInquiry, parseListRow, type ListRow, type PermitDetail } from './parse';
 import { tagPermit } from '../lib/tags';
-import { JsonStore, SupabaseStore, type RunStats, type Store } from './store';
+import { JsonStore, type RunStats, type Store } from './store';
 
 const BASE = 'https://ftgportal.sarasotafl.gov';
 const WINDOW = process.env.SEARCH_WINDOW ?? 'D30';
@@ -34,9 +33,6 @@ const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 
 
 function pickStore(): Store {
   if (process.argv.includes('--dry-run')) return new JsonStore('scraper/output/dry-run.json');
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!process.argv.includes('--json') && url && key) return new SupabaseStore(url, key);
   return new JsonStore();
 }
 
@@ -137,6 +133,8 @@ function buildRecord(row: ListRow, detail: PermitDetail | null, detailUrl: strin
       ? {
           permit_number: detail.permit_number,
           issued_date: detail.issued_date,
+          completed_date: detail.completed_date,
+          expiration_date: detail.expiration_date,
           city: detail.city,
           zip: detail.zip,
           owner_name: detail.owner_name,

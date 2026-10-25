@@ -36,11 +36,9 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
 
-      # Uses Supabase when its secrets are set; otherwise updates data/permits.json.
+      # Updates data/permits.json.
       - run: npm run scrape
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SCRAPER_CONTACT: ${{ secrets.SCRAPER_CONTACT }}
           SEARCH_WINDOW: ${{ inputs.window || 'D30' }}
           MAX_DETAILS: ${{ inputs.max_details || '1000' }}

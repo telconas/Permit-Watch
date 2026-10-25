@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
-import { isDemo, openAccess, usingSamplePermits } from '@/lib/demo';
 
 export const metadata: Metadata = {
-  title: 'Permit Watch Sarasota — permits sorted for your trade',
+  title: 'Permit Watch Sarasota: search every building permit',
   description:
-    "Every new City of Sarasota permit application, tagged for landscaping, fence, pool, gutter and blinds follow-on work, filtered to your ZIP codes and emailed each morning.",
+    'Search every City of Sarasota building permit by job, company, owner or address: pools, kitchens, roofs, trees and more. Updated every morning.',
 };
 
 export const viewport: Viewport = { themeColor: '#0f5c55', width: 'device-width', initialScale: 1 };
@@ -22,22 +21,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
         />
       </head>
-      <body className="min-h-screen">
-        {isDemo() && (
-          <div className="bg-[#fff4cc] px-4 py-2 text-center text-sm text-[#5c4a00]">
-            {usingSamplePermits() ? (
-              <>
-                Demo mode with sample permits. Run <code className="font-mono">npm run scrape:json</code> to load real ones.
-              </>
-            ) : (
-              openAccess()
-                ? 'Open preview: every City of Sarasota permit is visible, no sign-in needed.'
-                : 'Preview mode: real City of Sarasota permits. Sign-in and checkout are demo-only; no accounts or payments are real.'
-            )}
-          </div>
-        )}
+      <body className="flex min-h-screen flex-col">
         <SiteHeader />
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-line">
+          <div className="mx-auto max-w-6xl space-y-1 px-4 py-6 text-xs text-muted sm:px-6">
+            <p>Source: City of Sarasota Building &amp; Engineering permit portal, imported every morning.</p>
+            <p>
+              Permit Watch is independent and not affiliated with the City of Sarasota. Records can be incomplete, delayed or changed by the
+              city; check the city record before acting on them. Categories and lead tags are worked out automatically and can be wrong.
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );

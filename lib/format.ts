@@ -29,3 +29,32 @@ export function titleCase(s: string | null | undefined) {
   if (!s) return '';
   return s.toLowerCase().replace(/(^|[\s/(-])([a-z])/g, (_, a, b) => a + b.toUpperCase());
 }
+
+const KEEP_UPPER = new Set(
+  'AC A/C HVAC SFR SFH SFD PVC LED ROW FPL TECO KW BTU BTUS SEER SEER2 EV PV TPO GFCI GFI AHU HP LLC INC USA FL US II III IV ADA CMU ATS ALPR UAS'.split(' '),
+);
+
+/**
+ * Descriptions arrive in ALL CAPS about half the time. Turns those into sentence case and keeps
+ * trade acronyms ("HVAC", "A/C", "SEER2") as they are. Mixed-case text is left alone.
+ */
+export function readable(s: string | null | undefined) {
+  if (!s) return '';
+  const letters = s.replace(/[^A-Za-z]/g, '');
+  if (!letters || letters.replace(/[^A-Z]/g, '').length / letters.length < 0.7) return s;
+  const lower = s.toLowerCase().replace(/(^\s*|[.!?]\s+)([a-z])/g, (_, a, b) => a + b.toUpperCase());
+  const kept = lower.replace(/\b[a-z][a-z0-9/]*\b/gi, (w) => (KEEP_UPPER.has(w.toUpperCase()) ? w.toUpperCase() : w));
+  return kept.replace(/[a-z]/, (c) => c.toUpperCase());
+}
+
+/** "Oct 25, 9:51 AM" in Sarasota time. */
+export function easternDateTime(iso: string | null | undefined) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}

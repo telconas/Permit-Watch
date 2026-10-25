@@ -35,6 +35,7 @@ test('parses a real inquiry page', () => {
   assert.equal(d.permit_number, null);
   assert.equal(d.applied_date, '2026-10-21');
   assert.equal(d.issued_date, null);
+  assert.equal(d.completed_date, null);
   assert.equal(d.address, '2128 HYDE PARK CIR');
   assert.equal(d.city, 'SARASOTA');
   assert.equal(d.zip, '34239');

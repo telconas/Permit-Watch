@@ -1,4 +1,5 @@
 import type { Trade } from './trades';
+import { NEW_POOL } from './classify';
 
 export type PermitForTagging = {
   app_type?: string | null;
@@ -21,13 +22,19 @@ const RULES: Rule[] = [
     reason: 'New home',
     trades: ['landscaping', 'fence', 'pool', 'gutters', 'blinds'],
     test: (t, p) =>
-      has(t, /\bNEW (SINGLE[- ]FAMILY|SFR|SFD|RESIDENCE|HOME|DUPLEX|TOWNHOME|TOWNHOUSE)\b/) ||
-      (has(p.work_type.toUpperCase(), /\bNEW\b/) && has(p.work_type.toUpperCase(), /RESIDENTIAL/)),
+      has(t, /\bNEW (SINGLE[- ]FAMILY|SFR|SFD|SFH|RESIDENCE|HOME|DUPLEX|TOWNHOME|TOWNHOUSE)\b|\bBUILD (A )?NEW (RESIDENTIAL )?(HOME|HOUSE|RESIDENCE)\b/) ||
+      // A new pool's work type is also "NEW - RESIDENTIAL", so that alone isn't a new home.
+      (has(p.work_type.toUpperCase(), /\bNEW\b/) &&
+        has(p.work_type.toUpperCase(), /RESIDENTIAL/) &&
+        !/\bPOOL\b/.test(p.subtype.toUpperCase()) &&
+        !NEW_POOL.test(p.description.toUpperCase()) &&
+        !has(t, /\b(FENCE|SHED|DOCK|SEAWALL|BOAT ?LIFT|PERGOLA|GENERATOR|SOLAR|DRIVEWAY)\b/)),
   },
   {
     reason: 'Addition',
     trades: ['landscaping', 'gutters', 'blinds'],
-    test: (t) => has(t, /\bADDITION\b/) && !has(t, /ADDITIONAL/),
+    // A pool/deck addition isn't an addition to the house.
+    test: (t, p) => has(t, /\bADDITION\b/) && !has(t, /ADDITIONAL/) && !NEW_POOL.test(p.description.toUpperCase()) && !has(t, /\b(POOL|DECK|LANAI)\s*(\/\s*DECK\s*)?ADDITION/),
   },
   {
     reason: 'Demolition',
@@ -35,9 +42,10 @@ const RULES: Rule[] = [
     test: (t) => has(t, /\bDEMO(LITION|LISH)?\b/),
   },
   {
-    reason: 'Pool or spa permit',
+    reason: 'New pool or spa',
     trades: ['fence', 'landscaping', 'pool'],
-    test: (t) => has(t, /\b(POOL|SPA|HOT TUB)\b/),
+    // Strict: "pool sub panel" or "palm roots cracking the pool lines" is not a pool job.
+    test: (t, p) => /\bPOOL\b/.test(p.subtype.toUpperCase()) || NEW_POOL.test(p.description.toUpperCase()) || has(t, /\bHOT TUB\b/),
   },
   {
     reason: 'Screen enclosure',
