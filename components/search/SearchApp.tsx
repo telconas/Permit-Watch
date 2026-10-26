@@ -5,7 +5,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } f
 import { CATEGORIES, CATEGORY_LABEL, STAGES, STAGE_LABEL, type CategoryId, type StageId } from '@/lib/classify';
 import { DEFAULT_PARAMS, buildIndex, readParams, runSearch, writeParams, type Hit, type Params, type Rec } from '@/lib/search-core';
 import { TRADES, TRADE_INFO, type Trade } from '@/lib/trades';
-import { money, readable, shortDate } from '@/lib/format';
+import { money, readable, relativeDay, shortDate } from '@/lib/format';
 import { highlight } from './highlight';
 import { registerVisit } from './visits';
 import { rememberSearch } from './nav';
@@ -43,10 +43,12 @@ type Props = {
   total: number;
   /** Start of the latest import: what first-time visitors see as "New today". */
   newSince: string | null;
+  /** Eastern-time day (YYYY-MM-DD) of the latest import, for the chip's label. */
+  importDay: string | null;
   updatedLabel: string;
 };
 
-export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
+export function SearchApp({ initial, total, newSince, importDay, updatedLabel }: Props) {
   // The page is pre-built without any search, so the first render must be the plain page; the
   // search in the address bar is applied right after (otherwise React reports a mismatch).
   const [params, setParams] = useState<Params>(DEFAULT_PARAMS);
@@ -203,7 +205,7 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
           ))}
           {lastVisit && (
             <Chip active={params.fresh} onClick={() => update({ fresh: !params.fresh })} count={outcome?.freshCount} accent>
-              {isReturning ? 'New since your last visit' : 'New today'}
+              {isReturning ? 'New since your last visit' : `New ${importDay ? relativeDay(importDay) : 'today'}`}
             </Chip>
           )}
         </div>
@@ -298,6 +300,13 @@ export function SearchApp({ initial, total, newSince, updatedLabel }: Props) {
           </div>
         </div>
       </div>
+
+      {params.fresh && (
+        <p className="mt-2 text-sm text-ink-2">
+          {isReturning ? 'Permits that showed up on the city’s portal since your last visit.' : 'Permits that showed up on the city’s portal in the latest daily import.'} The city sometimes posts a
+          permit a few days after it was filed, so some filing dates are earlier.
+        </p>
+      )}
 
       {/* Results */}
       <div className="mt-3">

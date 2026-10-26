@@ -2,6 +2,7 @@ import 'server-only';
 import permitsFile from '@/data/permits.json';
 import type { Trade } from './trades';
 import { toRec, type Rec } from './search-core';
+import { easternDay, easternMidnight } from './format';
 
 /** A permit as stored in data/permits.json by the scraper. */
 export type Permit = {
@@ -92,12 +93,18 @@ export const getPermit = (appId: string) => load().byId.get(appId) ?? null;
 export const searchRecords = () => load().recs;
 export const lastRun = () => file.lastRun;
 export const dataUpdatedAt = () => file.lastRun?.finished_at ?? file.updatedAt;
-/** Permits first seen after this were added by the latest import ("New today"). */
-export const latestImportStartedAt = () => {
+/**
+ * The Eastern-time day of the latest import, and the moment that day began. Permits first seen
+ * since then are "New" for that day, so a backup run later the same morning adds to the set
+ * rather than replacing it.
+ */
+export const latestImport = () => {
   const run = file.lastRun;
   if (!run) return null;
   // Older runs didn't record a start time; imports finish well within 3 hours.
-  return run.started_at ?? new Date(new Date(run.finished_at).getTime() - 3 * 3_600_000).toISOString();
+  const started = run.started_at ?? new Date(new Date(run.finished_at).getTime() - 3 * 3_600_000).toISOString();
+  const day = easternDay(started);
+  return { day, since: easternMidnight(day) };
 };
 
 export const portalUrl = (p: Pick<Permit, 'detail_url'>) => p.detail_url ?? 'https://ftgportal.sarasotafl.gov/Permits/Search.aspx?microapp=c';

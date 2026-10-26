@@ -4,6 +4,9 @@ on:
   schedule:
     # 9:30 UTC = 5:30 AM EDT / 4:30 AM EST
     - cron: '30 9 * * *'
+    # Backup at 13:30 UTC (9:30 AM EDT): GitHub sometimes starts scheduled runs hours late or
+    # skips them. It stops right away if today's import already finished.
+    - cron: '30 13 * * *'
   workflow_dispatch:
     inputs:
       window:
@@ -29,15 +32,33 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+
+      # Backup run only: skip if an import already finished today (Eastern time).
+      - name: Already imported today?
+        id: check
+        if: github.event_name == 'schedule' && github.event.schedule == '30 13 * * *'
+        run: |
+          done=$(node -e "
+            const run = require('./data/permits.json').lastRun;
+            const day = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(d);
+            console.log(run && !run.error && day(new Date(run.finished_at)) === day(new Date()) ? 'yes' : 'no');
+          ")
+          echo "done=$done" >> "$GITHUB_OUTPUT"
+          [ "$done" = yes ] && echo "Today's import already finished; nothing to do." || true
+
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.done != 'yes'
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - if: steps.check.outputs.done != 'yes'
+        run: npm ci
+      - if: steps.check.outputs.done != 'yes'
+        run: npx playwright install --with-deps chromium
 
       # Updates data/permits.json.
       - run: npm run scrape
+        if: steps.check.outputs.done != 'yes'
         env:
           SCRAPER_CONTACT: ${{ secrets.SCRAPER_CONTACT }}
           SEARCH_WINDOW: ${{ inputs.window || 'D30' }}
@@ -46,6 +67,7 @@ jobs:
 
       # Commit the refreshed file. The push makes Netlify redeploy with the new permits.
       - name: Commit permits.json
+        if: steps.check.outputs.done != 'yes'
         run: |
           if git diff --quiet -- data/permits.json; then
             echo "No changes to commit"

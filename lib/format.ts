@@ -71,3 +71,31 @@ export function zillowUrl(address: string | null | undefined, zip?: string | nul
     .join(',-');
   return `https://www.zillow.com/homes/${encodeURIComponent(slug).replace(/%2C/g, ',')}_rb/`;
 }
+
+const TZ = 'America/New_York';
+
+/** The calendar day in Sarasota (Eastern time) for a timestamp, as YYYY-MM-DD. */
+export function easternDay(at: string | number | Date) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(at));
+}
+
+/** Midnight Eastern time at the start of a YYYY-MM-DD day, as an ISO timestamp. */
+export function easternMidnight(day: string) {
+  const [y, m, d] = day.split('-').map(Number);
+  // The offset in force around midnight Eastern (04:00 UTC), so daylight-saving change days work too.
+  const nearMidnight = new Date(Date.UTC(y, m - 1, d, 4));
+  const offset = new Intl.DateTimeFormat('en-US', { timeZone: TZ, timeZoneName: 'shortOffset' })
+    .formatToParts(nearMidnight)
+    .find((p) => p.type === 'timeZoneName')!.value; // "GMT-4"
+  const hours = Number(offset.replace('GMT', '') || 0);
+  return new Date(Date.UTC(y, m - 1, d) - hours * 3_600_000).toISOString();
+}
+
+/** "today", "yesterday" or "Sun, Oct 25" for a YYYY-MM-DD Eastern day, relative to now. */
+export function relativeDay(day: string, now = new Date()) {
+  const today = easternDay(now);
+  if (day === today) return 'today';
+  if (day === easternDay(now.getTime() - 86_400_000)) return 'yesterday';
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
+}

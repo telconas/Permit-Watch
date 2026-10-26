@@ -26,7 +26,7 @@ There is no database. `data/permits.json` holds the permits; the scraper only ev
 - **Search** (`lib/search-core.ts`): MiniSearch over address, ZIP, description, contractor, owner, permit type and ID. Prefix matching ("kitch" finds kitchen), one typo in words of 5+ letters, never in numbers. If nothing matches exactly it retries with swapped letters ("remodle") and says it's showing close spellings.
 - **Categories and stages** (`lib/classify.ts`): worked out from the city's type, subtype, work type and description. The city's subtype wins over description words. Tests with real descriptions in `lib/classify.test.ts`.
 - **Lead tags** (`lib/tags.ts`): likely follow-on work (a re-roof suggests gutters; a new pool suggests fence, landscaping, screen enclosure). Not confirmed jobs.
-- **New since your last visit**: remembered in the visitor's own browser; a gap of 30+ minutes starts a new visit. First-time visitors get "New today" instead.
+- **New since your last visit**: remembered in the visitor's own browser; a gap of 30+ minutes starts a new visit. First-time visitors get "New today" instead: every permit first seen on the latest import day (Eastern time), labeled "New yesterday" or with the date when today's import hasn't run yet. The city sometimes posts a permit days after it was filed, so a new permit can have an earlier filing date.
 - **Saved permits** (`components/saved/`): the star on a result, or Save on a permit page, adds it to `/saved`. Stored in the visitor's own browser only (localStorage), never sent to the server; the list can be downloaded as CSV. On the search page, the ★ Saved chip (`?saved=1`) narrows any search to saved permits, withdrawn ones included.
 - **Zillow**: each permit page links to Zillow's address search for the site address, in a new tab.
 - Every search has its own URL (`/?q=pool&cat=pool&stage=finished&zip=34236`), so searches can be bookmarked and shared.
@@ -46,7 +46,7 @@ npm test                          # categories, tags, portal parser, data file
 
 ## The daily import
 
-`.github/workflows/scrape.yml` runs every morning (GitHub may start scheduled jobs late on quiet repositories) and can be started by hand from the Actions tab. Options when run by hand: search window (`D30`, `M3`, `Y1`), how many detail pages to open, and "refresh details" to re-read every permit.
+`.github/workflows/scrape.yml` runs every morning at 5:30 AM Eastern, with a backup run at 9:30 AM that stops right away if the morning import already finished (GitHub sometimes starts scheduled jobs hours late, or skips them) and can be started by hand from the Actions tab. Options when run by hand: search window (`D30`, `M3`, `Y1`), how many detail pages to open, and "refresh details" to re-read every permit.
 
 A permit whose detail page fails is still saved from the results list, and retried on later runs. After 3 failures it's left alone unless its status changes; engineering and utility records never load on the city's own site.
 
