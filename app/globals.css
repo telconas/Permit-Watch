@@ -62,3 +62,28 @@
 @utility eyebrow {
   @apply font-mono text-xs font-medium tracking-[0.14em] text-hot uppercase;
 }
+
+/* "How it works" popup: a gentle rise and fade on open */
+dialog.hiw[open] {
+  animation: hiw-in 0.22s ease-out;
+}
+dialog.hiw[open]::backdrop {
+  animation: hiw-fade 0.22s ease-out;
+}
+@keyframes hiw-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+@keyframes hiw-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.hiw[open],
+  dialog.hiw[open]::backdrop {
+    animation: none;
+  }
+}

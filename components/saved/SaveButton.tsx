@@ -44,7 +44,7 @@ export function SaveStar({ rec, className = '' }: { rec: Rec; className?: string
 export function SavedLink() {
   const n = useSaved().length;
   return (
-    <Link href="/saved" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-ink-2 hover:bg-ground">
+    <Link href="/saved" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm whitespace-nowrap sm:px-3 font-semibold text-ink-2 hover:bg-ground">
       <Star filled={n > 0} className={n > 0 ? 'text-brand' : 'text-muted'} />
       Saved{n > 0 && <span className="rounded-full bg-brand px-1.5 text-xs leading-5 text-white tabular-nums">{n}</span>}
     </Link>

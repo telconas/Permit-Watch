@@ -28,6 +28,7 @@ There is no database. `data/permits.json` holds the permits; the scraper only ev
 - **Lead tags** (`lib/tags.ts`): likely follow-on work (a re-roof suggests gutters; a new pool suggests fence, landscaping, screen enclosure). Not confirmed jobs.
 - **New since your last visit**: remembered in the visitor's own browser; a gap of 30+ minutes starts a new visit. First-time visitors get "New today" instead: every permit first seen on the latest import day (Eastern time), labeled "New yesterday" or with the date when today's import hasn't run yet. The city sometimes posts a permit days after it was filed, so a new permit can have an earlier filing date.
 - **Saved permits** (`components/saved/`): the star on a result, or Save on a permit page, adds it to `/saved`. Stored in the visitor's own browser only (localStorage), never sent to the server; the list can be downloaded as CSV. On the search page, the ★ Saved chip (`?saved=1`) narrows any search to saved permits, withdrawn ones included.
+- **How it works** (`components/HowItWorks.tsx`): the welcome / how-to popup from the header. To add the walkthrough video, set `VIDEO` at the top of that file to a YouTube/Vimeo embed URL or an .mp4 link.
 - **Zillow**: each permit page links to Zillow's address search for the site address, in a new tab.
 - Every search has its own URL (`/?q=pool&cat=pool&stage=finished&zip=34236`), so searches can be bookmarked and shared.
 - Permit pages are kept out of Google (`noindex`) because they carry owner names; they stay fully visible and searchable on the site.

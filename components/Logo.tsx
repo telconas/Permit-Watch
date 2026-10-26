@@ -9,7 +9,7 @@ export function Logo() {
         </svg>
       </span>
       <span className="flex flex-col leading-none">
-        <span className="font-display text-[17px] font-bold tracking-tight">Permit Watch</span>
+        <span className="font-display text-[17px] font-bold tracking-tight whitespace-nowrap">Permit Watch</span>
         <span className="mt-1 font-mono text-[10px] tracking-[0.2em] text-muted">SARASOTA</span>
       </span>
     </span>
