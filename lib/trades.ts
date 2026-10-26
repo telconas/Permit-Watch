@@ -1,4 +1,4 @@
-export const TRADES = ['landscaping', 'fence', 'pool', 'gutters', 'blinds'] as const;
+export const TRADES = ['landscaping', 'fence', 'pool', 'gutters', 'blinds', 'painting'] as const;
 export type Trade = (typeof TRADES)[number];
 
 export const TRADE_INFO: Record<Trade, { label: string; blurb: string }> = {
@@ -7,6 +7,7 @@ export const TRADE_INFO: Record<Trade, { label: string; blurb: string }> = {
   pool: { label: 'Pool & screen enclosure', blurb: 'New homes and pool permits that often need enclosures or resurfacing' },
   gutters: { label: 'Gutters', blurb: 'Re-roofs, new roofs, additions, storm damage' },
   blinds: { label: 'Blinds & shutters', blurb: 'New homes, remodels, window and door replacements' },
+  painting: { label: 'Painting', blurb: 'Window and door jobs, stucco and drywall work, remodels, condo concrete restoration, new homes' },
 };
 
 export function isTrade(value: unknown): value is Trade {

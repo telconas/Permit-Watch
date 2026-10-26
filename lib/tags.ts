@@ -20,7 +20,7 @@ const has = (s: string, re: RegExp) => re.test(s);
 const RULES: Rule[] = [
   {
     reason: 'New home',
-    trades: ['landscaping', 'fence', 'pool', 'gutters', 'blinds'],
+    trades: ['landscaping', 'fence', 'pool', 'gutters', 'blinds', 'painting'],
     test: (t, p) =>
       has(t, /\bNEW (SINGLE[- ]FAMILY|SFR|SFD|SFH|RESIDENCE|HOME|DUPLEX|TOWNHOME|TOWNHOUSE)\b|\bBUILD (A )?NEW (RESIDENTIAL )?(HOME|HOUSE|RESIDENCE)\b/) ||
       // A new pool's work type is also "NEW - RESIDENTIAL", so that alone isn't a new home.
@@ -32,7 +32,7 @@ const RULES: Rule[] = [
   },
   {
     reason: 'Addition',
-    trades: ['landscaping', 'gutters', 'blinds'],
+    trades: ['landscaping', 'gutters', 'blinds', 'painting'],
     // A pool/deck addition isn't an addition to the house.
     test: (t, p) => has(t, /\bADDITION\b/) && !has(t, /ADDITIONAL/) && !NEW_POOL.test(p.description.toUpperCase()) && !has(t, /\b(POOL|DECK|LANAI)\s*(\/\s*DECK\s*)?ADDITION/),
   },
@@ -59,12 +59,12 @@ const RULES: Rule[] = [
   },
   {
     reason: 'Window or door replacement',
-    trades: ['blinds'],
+    trades: ['blinds', 'painting'],
     test: (t, p) => has(p.subtype.toUpperCase(), /WINDOW|DOOR/) || has(t, /\bWINDOWS?\b|SLIDING (GLASS )?DOOR/),
   },
   {
     reason: 'Remodel',
-    trades: ['blinds'],
+    trades: ['blinds', 'painting'],
     test: (t) => has(t, /\bREMODEL|RENOVAT|INTERIOR BUILD[- ]?OUT/),
   },
   {
@@ -79,8 +79,32 @@ const RULES: Rule[] = [
   },
   {
     reason: 'Storm damage repair',
-    trades: ['fence', 'gutters', 'landscaping'],
+    trades: ['fence', 'gutters', 'landscaping', 'painting'],
     test: (t, p) => has(p.app_type.toUpperCase(), /STORM|HURRICANE/) || has(t, /STORM DAMAGE|HURRICANE DAMAGE/),
+  },
+  {
+    reason: 'Painting in the scope',
+    trades: ['painting'],
+    // "Painted" usually describes an existing surface ("mounted to the painted wall"), and murals are art commissions.
+    test: (t) => has(t, /\b(RE)?PAINT(ING)?\b/) && !has(t, /\bMURAL/),
+  },
+  {
+    reason: 'Concrete or balcony restoration',
+    trades: ['painting'],
+    // Condo structural repairs end with a repaint of the building.
+    test: (t) => has(t, /CONCRETE (RESTORATION|REPAIRS?)|SPALL|BALCON(Y|IES) (REPAIR|RESTOR)|WATERPROOFING|MILESTONE INSPECTION/),
+  },
+  {
+    reason: 'Stucco, drywall or siding work',
+    trades: ['painting'],
+    // Stucco only when it's being worked on: "gas line at the exterior stucco wall" doesn't count.
+    // Prefab sheds come finished from the factory.
+    test: (t) =>
+      !has(t, /\bSHED\b/) &&
+      (has(t, /\bSTUCCO (REPAIRS?|WORK|PATCH\w*|REPLACE\w*|SYSTEM)\b|\b(REPAIR|REPLACE|PATCH|NEW|APPLY|RE-?)\w* (OF |EXTERIOR |LIMITED |THE )*STUCCO\b/) ||
+        has(t, /\b(DRYWALL|SHEETROCK|SOFFITS?|FASCIA)\b/) ||
+        // New vinyl siding is never painted; Hardie board and PVC siding are.
+        (has(t, /\bSIDING\b/) && !has(t, /\b(WITH|NEW|INSTALL\w*)\b[A-Z\- ]*\bVINYL SIDING\b/))),
   },
   {
     reason: 'Fence permit',
